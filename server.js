@@ -51,7 +51,7 @@ app.get('/:shortUrl', async (req, res) => {
     res.redirect(url.full)
 })
 
-mongoose.connect(dburl, {
+mongoose.connect(process.env.urldb || dburl, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then((result) => {
