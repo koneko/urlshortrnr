@@ -6,31 +6,51 @@ const port = process.env.PORT || 4000;
 const ShortURL = require('./models/shorturl.js')
 const {
     dburl,
-    isSecure
+    token
 } = require('./config.json')
 const fs = require('fs')
 const shortId = require('shortid')
 
 
 
-app.set('view engine', 'ejs')
-app.use(express.urlencoded({
-    extended: false
-}))
+// app.set('view engine', 'ejs')
+// app.use(express.urlencoded({
+//     extended: false
+// }))
 
 app.get('/', async (req, res) => {
     const shortUrls = await ShortURL.find()
-    res.render('index', {
-        shortUrls: shortUrls
+    res.send({
+        "endpoints": {
+            "/short": "add short, requires full and token, short is optional"
+        }
     })
 })
 
-app.post('/short', async (req, res) => {
-    await ShortURL.create({
-        full: req.body.fullUrl,
-        short: req.body.shortUrl || shortId.generate()
+app.get('/urls', async (req, res) => {
+    let urls = await ShortURL.find()
+    res.send({
+        "urls": urls
     })
-    res.redirect('/')
+})
+
+app.get('/add', async (req, res) => {
+    let finddupe = await ShortURL.find({
+        short: req.query.short
+    })
+    if (finddupe) return res.send('no duplicates')
+    if (req.query.full == null) return res.send('no url')
+    if (req.query.short == null) return res.send('no short url')
+    if (req.query.token == token) {
+        await ShortURL.create({
+            full: req.query.full,
+            short: req.query.short || shortId.generate()
+        })
+        res.send(`Success! Added ${req.query.full} as ${req.query.short} with 0 clicks.`)
+    } else {
+        res.send('token invalid or not provided')
+    }
+
 })
 
 app.get('/delete', async (req, res) => {
@@ -66,3 +86,12 @@ mongoose.connect(process.env.urldb || dburl, {
     console.log(err)
     fs.writeFile('log.txt', err)
 })
+
+
+// app.post('/short', async (req, res) => {
+//     await ShortURL.create({
+//         full: req.body.fullUrl,
+//         short: req.body.shortUrl || shortId.generate()
+//     })
+//     res.redirect('/')
+// })
