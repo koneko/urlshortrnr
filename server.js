@@ -5,9 +5,12 @@ const shorturl = require('./models/shorturl.js');
 const port = process.env.PORT || 4000;
 const ShortURL = require('./models/shorturl.js')
 const {
-    dburl
+    dburl,
+    isSecure
 } = require('./config.json')
 const fs = require('fs')
+const shortId = require('shortid')
+
 
 
 app.set('view engine', 'ejs')
@@ -24,7 +27,8 @@ app.get('/', async (req, res) => {
 
 app.post('/short', async (req, res) => {
     await ShortURL.create({
-        full: req.body.fullUrl
+        full: req.body.fullUrl,
+        short: req.body.shortUrl || shortId.generate()
     })
     res.redirect('/')
 })
@@ -58,7 +62,7 @@ mongoose.connect(process.env.urldb || dburl, {
     console.log("yay! connected to database successfully!!")
     app.listen(port, () => console.log('express is listeninging on port ' + port))
 }).catch((err) => {
-    throw 'oof sad error was caught, for convenience i have dumped it into a log file in case you want that, b-but ill log it for you >w<'
+    throw 'oof sad error was caught, for convenience i have dumped it into a log file in case you want that, b-but ill display it for you >w<'
     console.log(err)
     fs.writeFile('log.txt', err)
 })
