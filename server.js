@@ -90,7 +90,10 @@ mongoose.connect(process.env.urldb || dburl, {
     useUnifiedTopology: true
 }).then((result) => {
     console.log("yay! connected to database successfully!!")
-    app.listen(port, () => console.log('express is listeninging on port ' + port))
+    app.listen(port, () => {
+        console.log(`listeninging on port ${port}.`)
+        console.log(`to see all enpoints go to localhost:${port}/ and make sure to put a token in config.json`)
+    })
 }).catch((err) => {
     throw 'oof sad error was caught, for convenience i have dumped it into a log file in case you want that, b-but ill display it for you >w<'
     console.log(err)
