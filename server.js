@@ -22,12 +22,16 @@ app.get('/', async (req, res) => {
     const shortUrls = await ShortURL.find()
     res.send({
         "endpoints": {
-            "/short": "add short, requires full and token, short is optional"
+            "/urls": "lists all urls, requires token",
+            "/add": "add short, requires full and token, short is optional",
+            "/delete": "remove from db, requires short and token",
+            "/[shortUrl]": "redirects to that short url in db, no token needed"
         }
     })
 })
 
 app.get('/urls', async (req, res) => {
+    if (req.query.token != token) return res.send('token invalid or not provided')
     let urls = await ShortURL.find()
     res.send({
         "urls": urls
@@ -35,12 +39,13 @@ app.get('/urls', async (req, res) => {
 })
 
 app.get('/add', async (req, res) => {
+    if (req.query.full == null) return res.send('no url')
+    if (req.query.short == null) return res.send('no short url')
     let finddupe = await ShortURL.find({
         short: req.query.short
     })
     if (finddupe) return res.send('no duplicates')
-    if (req.query.full == null) return res.send('no url')
-    if (req.query.short == null) return res.send('no short url')
+
     if (req.query.token == token) {
         await ShortURL.create({
             full: req.query.full,
@@ -54,15 +59,20 @@ app.get('/add', async (req, res) => {
 })
 
 app.get('/delete', async (req, res) => {
-    let short = req.query.short;
-    if (short == null) {
-        return res.send('not allowed my guy')
+    if (req.query.token == token) {
+        let short = req.query.short;
+        if (short == null) {
+            return res.send('not allowed my guy')
+        }
+        let url = await ShortURL.findOne({
+            short: short
+        })
+        url.delete()
+        res.send(`Success! Deleted ${req.query.short} which redirected to ${req.query.long}`)
+    } else {
+        res.send('token invalid or not provided')
     }
-    let url = await ShortURL.findOne({
-        short: short
-    })
-    url.delete()
-    res.redirect('/')
+
 })
 
 app.get('/:shortUrl', async (req, res) => {
